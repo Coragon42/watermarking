@@ -1,19 +1,15 @@
 name: wllm
 channels:
-  - conda-forge
-  - pytorch
+  - conda-forge # smaller channel first
   - defaults
 dependencies:
   - setuptools>=68.0
-  - python=3.11.11  # Based on >=3.9 from pyproject.toml
-  - flax
+  - python>=3.9  # Based on >=3.9 from pyproject.toml
   - immutabledict #=4.2.0
-  - jax[cuda]>=0.3.2,<0.4.14 #for GPU support, version restricted by flax
   - jaxtyping
   - numpy #=1.26.0
   - optax
   - scikit-learn
-  - torch #=2.4.0 
   - tqdm
   - transformers #=4.43.3
   
@@ -22,6 +18,11 @@ dependencies:
   
   # Optional pip dependencies (notebook, test, etc.)
   - pip:
+    - torch #=2.4.0, moved to pip (not optional) 
+    - flax
+    - jax[cuda] # for GPU support
+    - jaxlib
+
     - tensorflow-datasets>=4.9.3 # From requirements.txt
     - datasets
     - huggingface_hub
