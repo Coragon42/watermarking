@@ -1,0 +1,37 @@
+name: wllm
+channels:
+  - conda-forge
+  - pytorch
+  - defaults
+dependencies:
+  - setuptools>=68.0
+  - python=3.11.11  # Based on >=3.9 from pyproject.toml
+  - flax
+  - immutabledict #=4.2.0
+  - jax[cuda]>=0.3.2,<0.4.14 #for GPU support, version restricted by flax
+  - jaxtyping
+  - numpy #=1.26.0
+  - optax
+  - scikit-learn
+  - torch #=2.4.0 
+  - tqdm
+  - transformers #=4.43.3
+  
+  # Add pip to ensure pip packages can be installed
+  - pip
+  
+  # Optional pip dependencies (notebook, test, etc.)
+  - pip:
+    - tensorflow-datasets>=4.9.3 # From requirements.txt
+    - datasets
+    - huggingface_hub
+    - ipywidgets
+    - pandas
+    - tensorflow
+    - notebook  # Jupyter notebook package
+    - synthid-text[notebook]  # To install optional notebook-specific dependencies
+    
+    # Test dependencies
+    - absl-py
+    - mock
+    - pytest
