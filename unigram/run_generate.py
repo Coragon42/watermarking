@@ -23,7 +23,7 @@ def main(args):
         tokenizer = LlamaTokenizer.from_pretrained(args.model_name, torch_dtype=torch.float16)
     else:
         tokenizer = AutoTokenizer.from_pretrained(args.model_name, torch_dtype=torch.float16)
-    model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map='auto')
+    model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map='auto', offload_folder='./offload/') # adding offload folder for weights
     model.eval()
 
     watermark_processor = LogitsProcessorList([GPTWatermarkLogitsWarper(fraction=args.fraction,
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # parser.add_argument("--model_name", type=str, default="facebook/opt-125m")
-    parser.add_argument("--model_name", type=str, default="decapoda-research/llama-7b-hf")
+    parser.add_argument("--model_name", type=str, default="baffo32/decapoda-research-llama-7B-hf") # decapoda-research/llama-7b-hf no longer exists
     parser.add_argument("--fraction", type=float, default=0.5)
     parser.add_argument("--strength", type=float, default=2.0)
     parser.add_argument("--wm_key", type=int, default=0)

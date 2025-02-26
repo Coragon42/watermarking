@@ -3,7 +3,8 @@ from typing import List
 import numpy as np
 from scipy.stats import norm
 import torch
-from transformers import LogitsWarper
+# from transformers import LogitsWarper # deprecated?
+from transformers import LogitsProcessor # or would a specific algo like EtaLogitsWarper be better here?
 
 
 class GPTWatermarkBase:
@@ -32,7 +33,7 @@ class GPTWatermarkBase:
         return int.from_bytes(hashlib.sha256(x).digest()[:4], 'little')
 
 
-class GPTWatermarkLogitsWarper(GPTWatermarkBase, LogitsWarper):
+class GPTWatermarkLogitsWarper(GPTWatermarkBase, LogitsProcessor):
     """
     LogitsWarper for watermarking distributions with fixed-group green-listed tokens.
 
