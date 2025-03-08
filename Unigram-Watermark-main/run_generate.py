@@ -3,7 +3,7 @@ from tqdm import tqdm
 import json
 import torch
 import os
-from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer, LogitsProcessorList
+from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer, LogitsProcessorList, BitsAndBytesConfig
 from gptwm import GPTWatermarkLogitsWarper
 
 
@@ -18,13 +18,28 @@ def write_file(filename, data):
 
 
 def main(args):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # use gpu
+    # print(f"Model will run on: {device}")
+    quantization_config = BitsAndBytesConfig(load_in_4bit=True, llm_int8_enable_fp32_cpu_offload=True)
+    # device_map = 'auto'
+    device_map = {'model.embed_tokens': 0, 'model.layers.0': 0, 'model.layers.1': 0, 'model.layers.2': 0, 'model.layers.3': 0, 'model.layers.4': 0, 'model.layers.5': 0, 'model.layers.6': 0, 'model.layers.7': 0, 'model.layers.8': 0, 'model.layers.9': 0, 'model.layers.10': 0, 'model.layers.11': 0, 'model.layers.12': 0, 'model.layers.13': 0, 'model.layers.14': 0, 'model.layers.15': 0, 'model.layers.16': 0, 'model.layers.17': 0, 'model.layers.18': 0, 'model.layers.19': 0, 'model.layers.20': 0, 'model.layers.21': 0, 'model.layers.22': 0, 'model.layers.23': 0, 'model.layers.24': 'cpu', 'model.layers.25': 'cpu', 'model.layers.26': 'cpu', 'model.layers.27': 'cpu', 'model.layers.28': 'cpu', 'model.layers.29': 'cpu', 'model.layers.30': 'cpu', 'model.layers.31': 'cpu', 'model.norm': 'cpu', 'model.rotary_emb': 'cpu', 'lm_head': 'cpu'}
+
     output_file = f"{args.output_dir}/{args.model_name.replace('/', '-')}_strength_{args.strength}_frac_{args.fraction}_len_{args.max_new_tokens}_num_{args.num_test}.jsonl"
     if 'llama' in args.model_name:
         tokenizer = LlamaTokenizer.from_pretrained(args.model_name, torch_dtype=torch.float16)
     else:
         tokenizer = AutoTokenizer.from_pretrained(args.model_name, torch_dtype=torch.float16)
-    model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map='auto', offload_folder='./offload/') # adding offload folder for weights
+
+    # adding offload folder for weights, "auto" should primarily use gpu, 4bit quantization
+    model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map=device_map, offload_folder='./offload/', quantization_config=quantization_config)
+    print(model.hf_device_map)
+    # device_map="auto" (unquantized): {'model.embed_tokens': 0, 'model.layers.0': 0, 'model.layers.1': 0, 'model.layers.2': 'cpu', 'model.layers.3': 'cpu', 'model.layers.4': 'cpu', 'model.layers.5': 'cpu', 'model.layers.6': 'cpu', 'model.layers.7': 'cpu', 'model.layers.8': 'cpu', 'model.layers.9': 'cpu', 'model.layers.10': 'cpu', 'model.layers.11': 'disk', 'model.layers.12': 'disk', 'model.layers.13': 'disk', 'model.layers.14': 'disk', 'model.layers.15': 'disk', 'model.layers.16': 'disk', 'model.layers.17': 'disk', 'model.layers.18': 'disk', 'model.layers.19': 'disk', 'model.layers.20': 'disk', 'model.layers.21': 'disk', 'model.layers.22': 'disk', 'model.layers.23': 'disk', 'model.layers.24': 'disk', 'model.layers.25': 'disk', 'model.layers.26': 'disk', 'model.layers.27': 'disk', 'model.layers.28': 'disk', 'model.layers.29': 'disk', 'model.layers.30': 'disk', 'model.layers.31': 'disk', 'model.norm': 'disk', 'model.rotary_emb': 'disk', 'lm_head': 'disk'}
+    # device_map="auto" (quantized): {'model.embed_tokens': 0, 'model.layers.0': 0, 'model.layers.1': 0, 'model.layers.2': 0, 'model.layers.3': 0, 'model.layers.4': 0, 'model.layers.5': 0, 'model.layers.6': 0, 'model.layers.7': 0, 'model.layers.8': 0, 'model.layers.9': 0, 'model.layers.10': 0, 'model.layers.11': 0, 'model.layers.12': 0, 'model.layers.13': 0, 'model.layers.14': 0, 'model.layers.15': 0, 'model.layers.16': 0, 'model.layers.17': 0, 'model.layers.18': 0, 'model.layers.19': 0, 'model.layers.20': 0, 'model.layers.21': 0, 'model.layers.22': 0, 'model.layers.23': 0, 'model.layers.24': 'cpu', 'model.layers.25': 'cpu', 'model.layers.26': 'cpu', 'model.layers.27': 'cpu', 'model.layers.28': 'cpu', 'model.layers.29': 'cpu', 'model.layers.30': 'cpu', 'model.layers.31': 'cpu', 'model.norm': 'cpu', 'model.rotary_emb': 'cpu', 'lm_head': 'cpu'}
     model.eval()
+
+    # print(tokenizer.vocab_size)
+    # print(model.vocab_size) # should be same?
+    # print(tokenizer.get_vocab())
 
     watermark_processor = LogitsProcessorList([GPTWatermarkLogitsWarper(fraction=args.fraction,
                                                                         strength=args.strength,
@@ -49,7 +64,7 @@ def main(args):
             prefix = cur_data['prefix']
             gold_completion = cur_data['targets'][0]
 
-        batch = tokenizer(prefix, truncation=True, return_tensors="pt")
+        batch = tokenizer(prefix, truncation=True, return_tensors="pt").to(device) # inputs should be on same device as model
         num_tokens = len(batch['input_ids'][0])
 
         with torch.inference_mode():
@@ -77,7 +92,7 @@ def main(args):
             "gen_completion": gen_text
         }))
 
-        if (idx + 1) % 100 == 0:
+        if (idx + 1) % 1 == 0: #100
             write_file(output_file, outputs)
             outputs = []
 
