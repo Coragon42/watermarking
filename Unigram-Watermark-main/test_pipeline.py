@@ -148,12 +148,12 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    dataset = "Adaptive"
+    dataset = "OpenGen"
     parser.add_argument("--dataset", type=str, default=dataset)
     # parser.add_argument("--model_name", type=str, default="facebook/opt-125m")
     parser.add_argument("--model_name", type=str, default="baffo32/decapoda-research-llama-7B-hf") # decapoda-research/llama-7b-hf no longer exists
-    parser.add_argument("--fraction", type=float, default=0.5)
     parser.add_argument("--strength", type=float, default=2.0)
+    parser.add_argument("--fraction", type=float, default=0.5)
     parser.add_argument("--max_new_tokens", type=int, default=300)
     parser.add_argument("--beam_size", type=int, default=None)
     parser.add_argument("--top_k", type=int, default=None)
