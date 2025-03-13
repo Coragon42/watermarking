@@ -2,6 +2,10 @@
 
 This repository contains code and resources for our research on watermarking AI-generated content, conducted under the guidance of **Professor Ananth** as part of the **Early Research Scholars Program (ERSP) at UCSB**.  
 
+Find our benchmarked sheet with various comparision and our notes on the research at the following links: 
+- https://docs.google.com/spreadsheets/d/15F7iMyDz2Qb0t_mAk-JszkRt_wM25wpxttvJuKUWmc8/edit?gid=0#gid=0
+- https://docs.google.com/document/d/1v2EuYsI66-0ZvISgL1vXnowjILgP0uxQuoFIDA4suEs/edit?tab=t.0#heading=h.iou2evld7cx1
+
 ## 📌 Overview  
 This project explores various AI watermarking techniques to embed and detect watermarks in generated text while preserving semantic integrity. The repository includes:  
 
