@@ -134,7 +134,7 @@ def main(args):
                 generation = model.generate(**generate_args) # the bulk of the computation time
                 gen_text = tokenizer.batch_decode(generation['sequences'][:, num_tokens:], skip_special_tokens=True)
             
-            print('gpu memory currently allocated:','{:g}'.format(float('{:.{p}g}'.format(torch.cuda.memory_allocated() / torch.cuda.memory_reserved(), p=3))),'%')
+            print('\ngpu memory currently allocated:','{:g}'.format(float('{:.{p}g}'.format(100*torch.cuda.memory_allocated() / torch.cuda.memory_reserved(), p=3))),'%')
             
             gen_tokens = tokenizer(gen_text[0], add_special_tokens=False)["input_ids"]
 
