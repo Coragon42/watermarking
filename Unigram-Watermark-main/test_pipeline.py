@@ -85,6 +85,7 @@ def main(args):
         if outputs:
             f.write("\n".join(outputs) + "\n") # changed to only open output file in append mode once with a single with-block
             f.flush() # to see outputs immediately (originally implicitly upon each with-block closing upon write_file return)
+        # these seemed to solve issue where generation would take longer with more iterations and sudden termination would worsen the issue even after restarting
         gc.collect() # clear unused CPU RAM
         if torch.cuda.is_available():
             torch.cuda.empty_cache() # clear unused GPU VRAM
@@ -114,6 +115,7 @@ def main(args):
             batch = tokenizer(prefix, truncation=True, return_tensors="pt").to(device) # inputs should be on same device as model (accelerate handles device map)
             num_tokens = len(batch['input_ids'][0])
 
+            # these seemed to solve issue where generation would take longer with more iterations and sudden termination would worsen the issue even after restarting
             gc.collect() # clear unused CPU RAM
             if torch.cuda.is_available():
                 torch.cuda.empty_cache() # clear unused GPU VRAM
@@ -138,7 +140,7 @@ def main(args):
                 gen_text = tokenizer.batch_decode(generation['sequences'][:, num_tokens:], skip_special_tokens=True)
             
             if torch.cuda.is_available():
-                print(f'\GPU memory currently allocated: {100*torch.cuda.memory_allocated() / torch.cuda.memory_reserved():.2f} % ({torch.cuda.memory_allocated()/1024**2:.0f} / {torch.cuda.memory_reserved()/1024**2:.0f}) MB')
+                print(f'\nGPU memory currently allocated: {100*torch.cuda.memory_allocated() / torch.cuda.memory_reserved():.2f}% ({torch.cuda.memory_allocated()/1024**2:.0f}/{torch.cuda.memory_reserved()/1024**2:.0f} MB)')
             
             gen_tokens = tokenizer(gen_text[0], add_special_tokens=False)["input_ids"]
 
@@ -159,7 +161,7 @@ def main(args):
             gen_length = [len(gen_tokens), len(are_tokens_green)] # first is for regular, second is unique tokens only
             too_short = False
             if gen_length[0] < args.test_min_tokens:
-                print(f"Warning: sequence {idx} is too short to test.")
+                print(f"Warning: generation {idx} is too short to test.")
                 too_short = True
 
             # same as detector.detect(gen_tokens), detector.unidetect(gen_tokens); using regular detector and "unique" detector
