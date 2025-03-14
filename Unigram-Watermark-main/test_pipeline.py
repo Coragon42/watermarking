@@ -71,7 +71,8 @@ def main(args):
                                     vocab_size=vocab_size,
                                     watermark_key=args.wm_key)
 
-    print('Time:',int(time()))
+    initial_time = int(time())
+    print('initial_time:',initial_time)
     outputs = []
 
     def manual_exit(signum, frame, ask=True):
@@ -85,13 +86,14 @@ def main(args):
             f.write("\n".join(outputs) + "\n") # changed to only open output file in append mode once with a single with-block
             f.flush() # to see outputs immediately (originally implicitly upon each with-block closing upon write_file return)
         gc.collect() # clear unused CPU RAM
-        torch.cuda.empty_cache() # clear unused GPU VRAM
-        torch.cuda.ipc_collect() # clear unused GPU VRAM from terminated processes
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache() # clear unused GPU VRAM
+            torch.cuda.ipc_collect() # clear unused GPU VRAM from terminated processes
         sys.exit(0) # raises SystemExit exception, so with-block will close file safely
 
     # signal handlers for safe manual exit
-    signal.signal(signal.SIGINT, manual_exit) # handle ctrl-C
-    signal.signal(signal.SIGTERM, manual_exit) # handle killing VSCode terminal
+    signal.signal(signal.SIGINT, manual_exit) # handle ctrl-C (if ctrl-C doesn't work then can kill terminal and restart computer)
+    signal.signal(signal.SIGTERM, manual_exit)
 
     # single with-block instead of opening file multiple times to reduce overhead and corruption risk
     with open(output_file, "a") as f:
@@ -109,12 +111,13 @@ def main(args):
                 gold_completion = cur_data['targets'][0]
             prefix = cur_data['prefix']
 
-            batch = tokenizer(prefix, truncation=True, return_tensors="pt").to(device) # inputs should be on same device as model
+            batch = tokenizer(prefix, truncation=True, return_tensors="pt").to(device) # inputs should be on same device as model (accelerate handles device map)
             num_tokens = len(batch['input_ids'][0])
 
             gc.collect() # clear unused CPU RAM
-            torch.cuda.empty_cache() # clear unused GPU VRAM
-            torch.cuda.ipc_collect() # clear unused GPU VRAM from terminated processes
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache() # clear unused GPU VRAM
+                torch.cuda.ipc_collect() # clear unused GPU VRAM from terminated processes
 
             with torch.inference_mode():
                 generate_args = {
@@ -134,7 +137,8 @@ def main(args):
                 generation = model.generate(**generate_args) # the bulk of the computation time
                 gen_text = tokenizer.batch_decode(generation['sequences'][:, num_tokens:], skip_special_tokens=True)
             
-            print('\ngpu memory currently allocated:','{:g}'.format(float('{:.{p}g}'.format(100*torch.cuda.memory_allocated() / torch.cuda.memory_reserved(), p=3))),'%')
+            if torch.cuda.is_available():
+                print(f'\GPU memory currently allocated: {100*torch.cuda.memory_allocated() / torch.cuda.memory_reserved():.2f} % ({torch.cuda.memory_allocated()/1024**2:.0f} / {torch.cuda.memory_reserved()/1024**2:.0f}) MB')
             
             gen_tokens = tokenizer(gen_text[0], add_special_tokens=False)["input_ids"]
 
@@ -169,6 +173,7 @@ def main(args):
             wm_pred = [1 if z_score[0] > args.threshold else 0,
                     1 if z_score[1] > unique_threshold else 0]
             time_completed = int(time())
+            print(f'Avg generation time: {(time_completed-initial_time)/(1+idx-num_cur_outputs):.2f}s/it') # since tqdm inaccurate when initial num_cur_outputs > 0
 
             outputs.append(json.dumps({
                 "time_completed": time_completed,
@@ -184,14 +189,14 @@ def main(args):
             }))
 
             if (idx + 1) % 1 == 0: # originally 100 (dump every 100 outputs), but changed to allow immediate observation
-                # write_file(output_file, outputs)
+                # write_file(output_file, outputs) # obsolete since I'm not batch writing (with-block already opened file)
                 f.write("\n".join(outputs) + "\n") # changed to only open output file in append mode once with a single with-block
                 f.flush() # to see outputs immediately (originally implicitly upon each with-block closing upon write_file return)
                 outputs = []
-                print('writing took',int(time())-time_completed,'seconds')
+                print('Writing took',int(time())-time_completed,'seconds')
         
         if outputs:
-            # write_file(output_file, outputs)
+            # write_file(output_file, outputs) # obsolete since I'm not batch writing (with-block already opened file)
             f.write("\n".join(outputs) + "\n") # changed to only open output file in append mode once with a single with-block
             f.flush() # to see outputs immediately (originally implicitly upon each with-block closing upon write_file return)
     
