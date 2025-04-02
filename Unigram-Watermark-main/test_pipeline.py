@@ -211,7 +211,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default=dataset)
     # parser.add_argument("--model_name", type=str, default="facebook/opt-125m")
     parser.add_argument("--model_name", type=str, default="baffo32/decapoda-research-llama-7B-hf") # decapoda-research/llama-7b-hf no longer exists
-    parser.add_argument("--strength", type=float, default=2.0) # aka delta
+    parser.add_argument("--strength", type=float, default=2.0) # aka delta, default was 2.0, set to 0 for unwatermarked model
     parser.add_argument("--fraction", type=float, default=0.5) # aka gamma
     parser.add_argument("--max_new_tokens", type=int, default=300)
     parser.add_argument("--beam_size", type=int, default=None)
