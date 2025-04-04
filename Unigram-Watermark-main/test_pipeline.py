@@ -12,6 +12,7 @@ import gc
 import signal
 import sys
 from functools import partial
+import scipy.stats
 
 def read_file(filename):
     with open(filename, "r") as f:
@@ -167,6 +168,8 @@ def main(args):
             # same as detector.detect(gen_tokens), detector.unidetect(gen_tokens); using regular detector and "unique" detector
             z_score = [detector._z_score(num_green[0], gen_length[0], args.fraction), 
                         detector._z_score(num_green[1], gen_length[1], args.fraction)] 
+            
+            p_value = [scipy.stats.norm.sf(z_score[0]),scipy.stats.norm.sf(z_score[1])]
 
             # desired/theoretical FPR (Type-I error rate)
             # want to match this with the FPR that the regular detection threshold corresponds to
@@ -184,6 +187,7 @@ def main(args):
                 "gen_completion": gen_text,
                 "too_short": too_short,
                 "z-score": z_score,
+                "p-value": p_value,
                 "wm_pred": wm_pred,
                 "gen_length": gen_length,
                 "num_green": num_green,
