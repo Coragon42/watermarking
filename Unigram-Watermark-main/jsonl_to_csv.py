@@ -2,7 +2,7 @@ import pandas as pd
 import json
 import csv
 
-input_file = './data/Adaptive/prompts_v0,facebook-opt-1.3b,2.0,0.5,300,None,None,0.9,6.0,0,200,-content-drive-MyDrive-watermarking-prompts_v0.jsonl,v0.jsonl'
+input_file = './data/Adaptive/prompts_v0,facebook-opt-1.3b,0,0.5,300,None,None,0.9,6.0,0,200,v0.jsonl'
 output_file = input_file[:-5]+'csv'
 
 # Read JSONL and collect records

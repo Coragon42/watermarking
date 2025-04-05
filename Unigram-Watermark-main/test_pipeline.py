@@ -34,7 +34,8 @@ def main(args):
     # new naming convention:
     output_file = ",".join([f'{t[1]}' for t in list(vars(args).items())[:-4]]).replace('/', '-') +",v" 
     if args.avoid_same_file == 0:
-        output_file = f'{args.output_dir}/' + output_file + '0.jsonl'
+        output_file = args.output_dir + output_file + '0.jsonl'
+        print(output_file)
     else:
         max_dupe = -1
         for file_name in os.listdir(args.output_dir):
@@ -42,7 +43,7 @@ def main(args):
                 number = int(file_name[len(output_file):-6])
                 if number > max_dupe:
                     max_dupe = number
-        output_file = f'{args.output_dir}/' + output_file + f'{max_dupe+1}.jsonl'
+        output_file = args.output_dir + output_file + f'{max_dupe+1}.jsonl'
     
     data = read_file(args.prompt_file)
     num_cur_outputs = len(read_file(output_file)) if os.path.exists(output_file) else 0
@@ -228,7 +229,7 @@ if __name__ == "__main__":
     parser.add_argument("--prompt_file", type=str, default=f"./data/{dataset}/inputs.jsonl")
     parser.add_argument("--output_dir", type=str, default=f"./data/{dataset}/")
     parser.add_argument("--num_test", type=int, default=500)
-    parser.add_argument("--avoid_same_file", type=int, default=0) # 0 is false (note: still will not override already written lines)
+    parser.add_argument("--avoid_same_file", type=int, default=1) # 0 is false (note: still will not override already written lines)
 
     args = parser.parse_args()
     main(args)
