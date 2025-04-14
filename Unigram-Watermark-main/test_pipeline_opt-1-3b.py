@@ -19,7 +19,7 @@ def read_file(filename):
         return [json.loads(line) for line in f.read().strip().split("\n")]
 
 # obsolete; not recommended for frequent writes, use with large batch writes only (like in original code), flushes after with-block closes per call
-def write_file(filename, data): 
+def write_file(filename, data):
     with open(filename, "a") as f:
         f.write("\n".join(data) + "\n")
 
@@ -27,12 +27,12 @@ def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # use gpu
     print(f"Model will run on: {device}")
     quantization_config = BitsAndBytesConfig(load_in_4bit=True, llm_int8_enable_fp32_cpu_offload=True, bnb_4bit_compute_dtype=torch.float16)
-    # device_map = 'auto'
-    device_map = {'model.embed_tokens': 0, 'model.layers.0': 0, 'model.layers.1': 0, 'model.layers.2': 0, 'model.layers.3': 0, 'model.layers.4': 0, 'model.layers.5': 0, 'model.layers.6': 0, 'model.layers.7': 0, 'model.layers.8': 0, 'model.layers.9': 0, 'model.layers.10': 0, 'model.layers.11': 0, 'model.layers.12': 0, 'model.layers.13': 0, 'model.layers.14': 0, 'model.layers.15': 0, 'model.layers.16': 0, 'model.layers.17': 0, 'model.layers.18': 0, 'model.layers.19': 0, 'model.layers.20': 0, 'model.layers.21': 0, 'model.layers.22': 0, 'model.layers.23': 0, 'model.layers.24': 'cpu', 'model.layers.25': 'cpu', 'model.layers.26': 'cpu', 'model.layers.27': 'cpu', 'model.layers.28': 'cpu', 'model.layers.29': 'cpu', 'model.layers.30': 'cpu', 'model.layers.31': 'cpu', 'model.norm': 'cpu', 'model.rotary_emb': 'cpu', 'lm_head': 'cpu'}
+    device_map = 'auto'
+    # device_map = {'model.embed_tokens': 0, 'model.layers.0': 0, 'model.layers.1': 0, 'model.layers.2': 0, 'model.layers.3': 0, 'model.layers.4': 0, 'model.layers.5': 0, 'model.layers.6': 0, 'model.layers.7': 0, 'model.layers.8': 0, 'model.layers.9': 0, 'model.layers.10': 0, 'model.layers.11': 0, 'model.layers.12': 0, 'model.layers.13': 0, 'model.layers.14': 0, 'model.layers.15': 0, 'model.layers.16': 0, 'model.layers.17': 0, 'model.layers.18': 0, 'model.layers.19': 0, 'model.layers.20': 0, 'model.layers.21': 0, 'model.layers.22': 0, 'model.layers.23': 0, 'model.layers.24': 'cpu', 'model.layers.25': 'cpu', 'model.layers.26': 'cpu', 'model.layers.27': 'cpu', 'model.layers.28': 'cpu', 'model.layers.29': 'cpu', 'model.layers.30': 'cpu', 'model.layers.31': 'cpu', 'model.norm': 'cpu', 'model.rotary_emb': 'cpu', 'lm_head': 'cpu'}
 
     # output_file = f"{args.model_name.replace('/', '-')}_strength_{args.strength}_frac_{args.fraction}_len_{args.max_new_tokens}_"
     # new naming convention:
-    output_file = ",".join([f'{t[1]}' for t in list(vars(args).items())[:-4]]).replace('/', '-') +",v" 
+    output_file = ",".join([f'{t[1]}' for t in list(vars(args).items())[:-5]]).replace('/', '-') +",v"
     if args.avoid_same_file == 0:
         output_file = args.output_dir + output_file + '0.jsonl'
         print(output_file)
@@ -44,10 +44,10 @@ def main(args):
                 if number > max_dupe:
                     max_dupe = number
         output_file = args.output_dir + output_file + f'{max_dupe+1}.jsonl'
-    
+
     data = read_file(args.prompt_file)
     num_cur_outputs = len(read_file(output_file)) if os.path.exists(output_file) else 0
-    
+
     if 'llama' in args.model_name:
         tokenizer = LlamaTokenizer.from_pretrained(args.model_name, torch_dtype=torch.float16)
     else:
@@ -57,7 +57,7 @@ def main(args):
     # after quantization, I didn't actually need the offload folder on disk (see my device maps below), but just keeping it here for general use
     model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map=device_map, offload_folder='./offload/', quantization_config=quantization_config)
     # to specify your device_map, print out quantized hf_device_map with device_map="auto" and then copy-paste it as the argument
-    # print(model.hf_device_map)
+    print(model.hf_device_map)
     # device_map="auto" (unquantized): {'model.embed_tokens': 0, 'model.layers.0': 0, 'model.layers.1': 0, 'model.layers.2': 'cpu', 'model.layers.3': 'cpu', 'model.layers.4': 'cpu', 'model.layers.5': 'cpu', 'model.layers.6': 'cpu', 'model.layers.7': 'cpu', 'model.layers.8': 'cpu', 'model.layers.9': 'cpu', 'model.layers.10': 'cpu', 'model.layers.11': 'disk', 'model.layers.12': 'disk', 'model.layers.13': 'disk', 'model.layers.14': 'disk', 'model.layers.15': 'disk', 'model.layers.16': 'disk', 'model.layers.17': 'disk', 'model.layers.18': 'disk', 'model.layers.19': 'disk', 'model.layers.20': 'disk', 'model.layers.21': 'disk', 'model.layers.22': 'disk', 'model.layers.23': 'disk', 'model.layers.24': 'disk', 'model.layers.25': 'disk', 'model.layers.26': 'disk', 'model.layers.27': 'disk', 'model.layers.28': 'disk', 'model.layers.29': 'disk', 'model.layers.30': 'disk', 'model.layers.31': 'disk', 'model.norm': 'disk', 'model.rotary_emb': 'disk', 'lm_head': 'disk'}
     # device_map="auto" (quantized): {'model.embed_tokens': 0, 'model.layers.0': 0, 'model.layers.1': 0, 'model.layers.2': 0, 'model.layers.3': 0, 'model.layers.4': 0, 'model.layers.5': 0, 'model.layers.6': 0, 'model.layers.7': 0, 'model.layers.8': 0, 'model.layers.9': 0, 'model.layers.10': 0, 'model.layers.11': 0, 'model.layers.12': 0, 'model.layers.13': 0, 'model.layers.14': 0, 'model.layers.15': 0, 'model.layers.16': 0, 'model.layers.17': 0, 'model.layers.18': 0, 'model.layers.19': 0, 'model.layers.20': 0, 'model.layers.21': 0, 'model.layers.22': 0, 'model.layers.23': 0, 'model.layers.24': 'cpu', 'model.layers.25': 'cpu', 'model.layers.26': 'cpu', 'model.layers.27': 'cpu', 'model.layers.28': 'cpu', 'model.layers.29': 'cpu', 'model.layers.30': 'cpu', 'model.layers.31': 'cpu', 'model.norm': 'cpu', 'model.rotary_emb': 'cpu', 'lm_head': 'cpu'}
     model.eval()
@@ -92,6 +92,7 @@ def main(args):
         if torch.cuda.is_available():
             torch.cuda.empty_cache() # clear unused GPU VRAM
             torch.cuda.ipc_collect() # clear unused GPU VRAM from terminated processes
+        # drive.flush_and_unmount()
         sys.exit(0) # raises SystemExit exception, so with-block will close file safely
 
     # signal handlers for safe manual exit
@@ -140,16 +141,16 @@ def main(args):
                     generate_args['top_p'] = args.top_p
                 generation = model.generate(**generate_args) # the bulk of the computation time
                 gen_text = tokenizer.batch_decode(generation['sequences'][:, num_tokens:], skip_special_tokens=True)
-            
+
             if torch.cuda.is_available():
                 print(f'\nGPU memory currently allocated: {100*torch.cuda.memory_allocated() / torch.cuda.memory_reserved():.2f}% ({torch.cuda.memory_allocated()/1024**2:.0f}/{torch.cuda.memory_reserved()/1024**2:.0f} MB)')
-            
+
             gen_tokens = tokenizer(gen_text[0], add_special_tokens=False)["input_ids"]
 
             num_green = [0,0] # first is for regular, second is unique tokens only
             # {id: decoded string, whether greenlisted, # occurrences}; may be useful to sort in post
             # must use id for key (not decoded string) because decoding collisions may occur (e.g. Llama 2 uses SentencePiece tokenizer)
-            are_tokens_green = {} 
+            are_tokens_green = {}
             for i in gen_tokens:
                 decoded = tokenizer.decode(i)
                 is_green = int(detector.green_list_mask[i].item())
@@ -159,7 +160,7 @@ def main(args):
                 else:
                     are_tokens_green[i][2] += 1
                 num_green[0] += is_green
-            
+
             gen_length = [len(gen_tokens), len(are_tokens_green)] # first is for regular, second is unique tokens only
             too_short = False
             if gen_length[0] < args.test_min_tokens:
@@ -167,9 +168,9 @@ def main(args):
                 too_short = True
 
             # same as detector.detect(gen_tokens), detector.unidetect(gen_tokens); using regular detector and "unique" detector
-            z_score = [detector._z_score(num_green[0], gen_length[0], args.fraction), 
-                        detector._z_score(num_green[1], gen_length[1], args.fraction)] 
-            
+            z_score = [detector._z_score(num_green[0], gen_length[0], args.fraction),
+                        detector._z_score(num_green[1], gen_length[1], args.fraction)]
+
             p_value = [scipy.stats.norm.sf(z_score[0]),scipy.stats.norm.sf(z_score[1])]
 
             # desired/theoretical FPR (Type-I error rate)
@@ -201,35 +202,37 @@ def main(args):
                 f.flush() # to see outputs immediately (originally implicitly upon each with-block closing upon write_file return)
                 outputs = []
                 print('Writing took',int(time())-time_completed,'seconds')
-        
+
         if outputs:
             # write_file(output_file, outputs) # obsolete since I'm not batch writing (with-block already opened file)
             f.write("\n".join(outputs) + "\n") # changed to only open output file in append mode once with a single with-block
             f.flush() # to see outputs immediately (originally implicitly upon each with-block closing upon write_file return)
-    
+
     print("Finished!")
+    # drive.flush_and_unmount()
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+# if __name__ == "__main__":
+parser = argparse.ArgumentParser()
 
-    dataset = "OpenGen"
-    parser.add_argument("--dataset", type=str, default=dataset)
-    # parser.add_argument("--model_name", type=str, default="facebook/opt-125m")
-    parser.add_argument("--model_name", type=str, default="baffo32/decapoda-research-llama-7B-hf") # decapoda-research/llama-7b-hf no longer exists
-    parser.add_argument("--strength", type=float, default=2.0) # aka delta, default was 2.0, set to 0 for unwatermarked model
-    parser.add_argument("--fraction", type=float, default=0.5) # aka gamma
-    parser.add_argument("--max_new_tokens", type=int, default=300)
-    parser.add_argument("--beam_size", type=int, default=None)
-    parser.add_argument("--top_k", type=int, default=None)
-    parser.add_argument("--top_p", type=float, default=0.9)
-    parser.add_argument("--threshold", type=float, default=6.0) # aka tau, but NOT the same as tau calculated for unique detector
-    parser.add_argument("--wm_key", type=int, default=0)
-    parser.add_argument("--test_min_tokens", type=int, default=200)
+dataset = "Adaptive" # "OpenGen"
+parser.add_argument("--dataset", type=str, default=dataset)
+# parser.add_argument("--model_name", type=str, default="facebook/opt-125m")
+parser.add_argument("--model_name", type=str, default="facebook/opt-1.3b") # baffo32/decapoda-research-llama-7B-hf
+parser.add_argument("--strength", type=float, default=2.0) # aka delta, default was 2.0, set to 0 for unwatermarked model
+parser.add_argument("--fraction", type=float, default=0.5) # aka gamma
+parser.add_argument("--max_new_tokens", type=int, default=300)
+parser.add_argument("--beam_size", type=int, default=None)
+parser.add_argument("--top_k", type=int, default=None)
+parser.add_argument("--top_p", type=float, default=0.9)
+parser.add_argument("--threshold", type=float, default=6.0) # aka tau, but NOT the same as tau calculated for unique detector
+parser.add_argument("--wm_key", type=int, default=0)
+parser.add_argument("--test_min_tokens", type=int, default=200)
 
-    parser.add_argument("--prompt_file", type=str, default=f"./data/{dataset}/inputs.jsonl")
-    parser.add_argument("--output_dir", type=str, default=f"./data/{dataset}/")
-    parser.add_argument("--num_test", type=int, default=500)
-    parser.add_argument("--avoid_same_file", type=int, default=1) # 0 is false (note: still will not override already written lines)
+parser.add_argument("--prompt_file", type=str, default=f"./data/{dataset}/inputs.jsonl") #
+parser.add_argument("--output_dir", type=str, default=f"./data/{dataset}/")
+parser.add_argument("--num_test", type=int, default=2000)
+parser.add_argument("--avoid_same_file", type=int, default=0) # 0 is false (note: still will not override already written lines)
+parser.add_argument("-f", "--fff", help="a dummy argument to fool ipython", default="1") # https://stackoverflow.com/questions/48796169/how-to-fix-ipykernel-launcher-py-error-unrecognized-arguments-in-jupyter
 
-    args = parser.parse_args()
-    main(args)
+args = parser.parse_args()
+main(args)

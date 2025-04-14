@@ -1,8 +1,8 @@
-import pandas as pd
 import json
 import csv
 
 input_file = './data/Adaptive/prompts_v0,facebook-opt-1.3b,0,0.5,300,None,None,0.9,6.0,0,200,v0.jsonl'
+# input_file = './data/Adaptive/to_redetect_unwatermarked.jsonl'
 output_file = input_file[:-5]+'csv'
 
 # Read JSONL and collect records
