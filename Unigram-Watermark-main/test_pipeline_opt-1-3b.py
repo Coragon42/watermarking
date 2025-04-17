@@ -32,7 +32,7 @@ def main(args):
 
     # output_file = f"{args.model_name.replace('/', '-')}_strength_{args.strength}_frac_{args.fraction}_len_{args.max_new_tokens}_"
     # new naming convention:
-    output_file = ",".join([f'{t[1]}' for t in list(vars(args).items())[:-5]]).replace('/', '-') +",v"
+    output_file = "Unigram,"+",".join([f'{t[1]}' for t in list(vars(args).items())[:-5]]).replace('/', '-') +",v"
     if args.avoid_same_file == 0:
         output_file = args.output_dir + output_file + '0.jsonl'
         print(output_file)
