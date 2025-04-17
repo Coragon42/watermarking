@@ -164,7 +164,7 @@ def main(args):
             gen_length = [len(gen_tokens), len(are_tokens_green)] # first is for regular, second is unique tokens only
             too_short = False
             if gen_length[0] < args.test_min_tokens:
-                print(f"Warning: generation {idx} is too short to test.")
+                print(f"Warning: generation {idx+1} is too short to test. ({gen_length[0]} < {args.test_min_tokens})")
                 too_short = True
 
             # same as detector.detect(gen_tokens), detector.unidetect(gen_tokens); using regular detector and "unique" detector
@@ -201,7 +201,7 @@ def main(args):
                 f.write("\n".join(outputs) + "\n") # changed to only open output file in append mode once with a single with-block
                 f.flush() # to see outputs immediately (originally implicitly upon each with-block closing upon write_file return)
                 outputs = []
-                print('Writing took',int(time())-time_completed,'seconds')
+                # print('Writing took',int(time())-time_completed,'seconds')
 
         if outputs:
             # write_file(output_file, outputs) # obsolete since I'm not batch writing (with-block already opened file)
@@ -218,7 +218,7 @@ dataset = "Adaptive" # "OpenGen"
 parser.add_argument("--dataset", type=str, default=dataset)
 # parser.add_argument("--model_name", type=str, default="facebook/opt-125m")
 parser.add_argument("--model_name", type=str, default="facebook/opt-1.3b") # baffo32/decapoda-research-llama-7B-hf
-parser.add_argument("--strength", type=float, default=2.0) # aka delta, default was 2.0, set to 0 for unwatermarked model
+parser.add_argument("--strength", type=float, default=0) # aka delta, default was 2.0, set to 0 for unwatermarked model
 parser.add_argument("--fraction", type=float, default=0.5) # aka gamma
 parser.add_argument("--max_new_tokens", type=int, default=300)
 parser.add_argument("--beam_size", type=int, default=None)
@@ -228,9 +228,9 @@ parser.add_argument("--threshold", type=float, default=6.0) # aka tau, but NOT t
 parser.add_argument("--wm_key", type=int, default=0)
 parser.add_argument("--test_min_tokens", type=int, default=200)
 
-parser.add_argument("--prompt_file", type=str, default=f"./data/{dataset}/inputs.jsonl") #
+parser.add_argument("--prompt_file", type=str, default=f"./data/{dataset}/inputs_var.jsonl") #
 parser.add_argument("--output_dir", type=str, default=f"./data/{dataset}/")
-parser.add_argument("--num_test", type=int, default=2000)
+parser.add_argument("--num_test", type=int, default=1000)
 parser.add_argument("--avoid_same_file", type=int, default=0) # 0 is false (note: still will not override already written lines)
 parser.add_argument("-f", "--fff", help="a dummy argument to fool ipython", default="1") # https://stackoverflow.com/questions/48796169/how-to-fix-ipykernel-launcher-py-error-unrecognized-arguments-in-jupyter
 

@@ -163,7 +163,7 @@ def main(args):
             gen_length = [len(gen_tokens), len(are_tokens_green)] # first is for regular, second is unique tokens only
             too_short = False
             if gen_length[0] < args.test_min_tokens:
-                print(f"Warning: generation {idx} is too short to test.")
+                print(f"Warning: generation {idx+1} is too short to test. ({gen_length[0]} < {args.test_min_tokens})")
                 too_short = True
 
             # same as detector.detect(gen_tokens), detector.unidetect(gen_tokens); using regular detector and "unique" detector
@@ -200,7 +200,7 @@ def main(args):
                 f.write("\n".join(outputs) + "\n") # changed to only open output file in append mode once with a single with-block
                 f.flush() # to see outputs immediately (originally implicitly upon each with-block closing upon write_file return)
                 outputs = []
-                print('Writing took',int(time())-time_completed,'seconds')
+                # print('Writing took',int(time())-time_completed,'seconds')
         
         if outputs:
             # write_file(output_file, outputs) # obsolete since I'm not batch writing (with-block already opened file)
