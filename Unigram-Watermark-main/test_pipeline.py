@@ -114,7 +114,7 @@ def main(args):
                 gold_completion = cur_data['targets'][0]
             prefix = cur_data['prefix']
 
-            batch = tokenizer(prefix, truncation=True, return_tensors="pt").to(device) # inputs should be on same device as model (accelerate handles device map)
+            batch = tokenizer(prefix, truncation=True, return_tensors="pt").to(model.device) # inputs should be on same device as model (accelerate handles device map)
             num_tokens = len(batch['input_ids'][0])
 
             # these seemed to solve issue where generation would take longer with more iterations and sudden termination would worsen the issue even after restarting

@@ -114,8 +114,8 @@ def main(args):
                 prefix = cur_data['prefix']
                 gold_completion = cur_data['targets'][0]
             prefix = cur_data['prefix']
-
-            batch = tokenizer(prefix, truncation=True, return_tensors="pt").to(device) # inputs should be on same device as model (accelerate handles device map)
+            # print(model.device)
+            batch = tokenizer(prefix, truncation=True, return_tensors="pt").to(model.device) # inputs should be on same device as model (accelerate handles device map)
             num_tokens = len(batch['input_ids'][0])
 
             # these seemed to solve issue where generation would take longer with more iterations and sudden termination would worsen the issue even after restarting
@@ -230,7 +230,7 @@ parser.add_argument("--test_min_tokens", type=int, default=200)
 
 parser.add_argument("--prompt_file", type=str, default=f"./data/{dataset}/inputs_var.jsonl") #
 parser.add_argument("--output_dir", type=str, default=f"./data/{dataset}/")
-parser.add_argument("--num_test", type=int, default=1000)
+parser.add_argument("--num_test", type=int, default=2000)
 parser.add_argument("--avoid_same_file", type=int, default=0) # 0 is false (note: still will not override already written lines)
 parser.add_argument("-f", "--fff", help="a dummy argument to fool ipython", default="1") # https://stackoverflow.com/questions/48796169/how-to-fix-ipykernel-launcher-py-error-unrecognized-arguments-in-jupyter
 
