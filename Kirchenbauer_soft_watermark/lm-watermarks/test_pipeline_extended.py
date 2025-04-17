@@ -257,7 +257,7 @@ parser.add_argument("--max_new_tokens", type=int, default=300) # default for Kir
 # extended implementation uses greedy sampling, so no args for multinomial sampling nor beam search
 parser.add_argument("--threshold", type=float, default=4.0) # aka tau, but NOT the same as tau calculated for unique detector, not same as for Unigram
 # parser.add_argument("--wm_key", type=int, default=0) # hash key default contained in extended_watermark_processor.py
-parser.add_argument("--test_min_tokens", type=int, default=25)
+parser.add_argument("--test_min_tokens", type=int, default=25) # informal minimum from paper
 
 parser.add_argument(
     "--seeding_scheme",
@@ -271,12 +271,7 @@ parser.add_argument(
     default="",
     help="Single or comma separated list of the preprocessors/normalizer names to use when performing watermark detection.",
 )
-parser.add_argument(
-    "--ignore_repeated_ngrams",
-    type=str2bool,
-    default=True,
-    help="Whether to use the detection method that only counts each unqiue bigram once as either a green or red hit.",
-)
+# no need for ngrams argument because we use both detectors anyway
 
 parser.add_argument("--prompt_file", type=str, default=f"./data/{dataset}/inputs_var.jsonl") #
 parser.add_argument("--output_dir", type=str, default=f"./data/{dataset}/")
