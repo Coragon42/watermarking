@@ -9,7 +9,7 @@ import gc
 import signal
 import sys
 from functools import partial
-from extended_watermark_processor import WatermarkLogitsProcessor, WatermarkDetector
+from watermark_processor import WatermarkLogitsProcessor, WatermarkDetector
 
 def str2bool(v): # from demo_watermark.py
     """Util function for user friendly boolean flag args"""
@@ -40,7 +40,7 @@ def main(args):
 
     # output_file = f"{args.model_name.replace('/', '-')}_strength_{args.strength}_frac_{args.fraction}_len_{args.max_new_tokens}_"
     # new naming convention:
-    output_file = "extended,"+",".join([f'{t[1]}' for t in list(vars(args).items())[:-5]]).replace('/', '-') +",v"
+    output_file = "minimal,"+",".join([f'{t[1]}' for t in list(vars(args).items())[:-5]]).replace('/', '-') +",v"
     if args.avoid_same_file == 0:
         output_file = args.output_dir + output_file + '0.jsonl'
         print(output_file)
@@ -82,9 +82,9 @@ def main(args):
                                  tokenizer=tokenizer,
                                  z_threshold=args.threshold,
                                  normalizers=args.normalizers,
-                                 ignore_repeated_ngrams=False) # like in original paper experiments (though my gamma is different)
+                                 ignore_repeated_bigrams=False)
     
-    # counting only unique ngrams (not necessarily unique tokens like in Unigram)
+    # ignores repeated bigrams
     unique_detector = WatermarkDetector(vocab=list(tokenizer.get_vocab().values()),
                                  gamma=args.fraction, # should match original setting
                                  seeding_scheme=args.seeding_scheme, # should match original setting
@@ -92,7 +92,7 @@ def main(args):
                                  tokenizer=tokenizer,
                                  z_threshold=args.threshold,
                                  normalizers=args.normalizers,
-                                 ignore_repeated_ngrams=True)
+                                 ignore_repeated_bigrams=True)
 
     initial_time = int(time())
     print('initial_time:',initial_time)
@@ -154,12 +154,19 @@ def main(args):
                     'max_new_tokens': args.max_new_tokens,
                 }
 
-                # if args.beam_size is not None:
-                #     generate_args['num_beams'] = args.beam_size
-                # else:
-                #     generate_args['do_sample'] = True
-                #     generate_args['top_k'] = args.top_k
-                #     generate_args['top_p'] = args.top_p
+                if args.use_sampling:
+                    generate_args.update(dict(
+                        do_sample=True, 
+                        top_k=0,
+                        temperature=args.sampling_temp
+                    ))
+                else:
+                    generate_args.update(dict(
+                        num_beams=args.n_beams
+                    ))
+
+                torch.manual_seed(args.generation_seed) # makes outputs deterministic given same prompts...same as in extended implementation
+
                 generation = model.generate(**generate_args) # the bulk of the computation time
                 gen_text = tokenizer.batch_decode(generation['sequences'][:, num_tokens:], skip_special_tokens=True)
 
@@ -268,9 +275,33 @@ parser.add_argument(
     default="",
     help="Single or comma separated list of the preprocessors/normalizer names to use when performing watermark detection.",
 )
-# no need for ngrams argument because we use both detectors anyway
+parser.add_argument(
+    "--generation_seed",
+    type=int,
+    default=123,
+    help="Seed for setting the torch global rng prior to generation.",
+)
+parser.add_argument(
+    "--use_sampling",
+    type=str2bool,
+    default=True,
+    help="Whether to generate using multinomial sampling.",
+)
+parser.add_argument(
+    "--sampling_temp",
+    type=float,
+    default=0.7,
+    help="Sampling temperature to use when generating using multinomial sampling.",
+)
+parser.add_argument(
+    "--n_beams",
+    type=int,
+    default=1,
+    help="Number of beams to use for beam search. 1 is normal greedy decoding",
+)
+# no need for bigrams argument because we use both detectors anyway
 
-parser.add_argument("--prompt_file", type=str, default=f"./data/{dataset}/inputs_var.jsonl") #
+parser.add_argument("--prompt_file", type=str, default=f"./data/{dataset}/test.jsonl") #
 parser.add_argument("--output_dir", type=str, default=f"./data/{dataset}/")
 parser.add_argument("--num_test", type=int, default=2000)
 parser.add_argument("--avoid_same_file", type=int, default=0) # 0 is false (note: still will not override already written lines)
