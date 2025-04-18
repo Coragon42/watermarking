@@ -182,7 +182,7 @@ def main(args):
             # {id: decoded string, # green occurrences, # red occurrences}; may be useful to sort in post
             # unlike Unigram, same token could possibly be green in one instance but red in another
             # must use id for key (not decoded string) because decoding collisions may occur (e.g. Llama 2 uses SentencePiece tokenizer)
-            are_tokens_green = {}
+            tokens_green_red_counts = {}
             for index,i in enumerate(gen_tokens):
                 if index >= len(score_dict['green_token_mask']):
                     # with simple hash's context width of 1, for some reason len(gen_tokens) is always 1 more than # tokens scored???
@@ -190,23 +190,23 @@ def main(args):
                     break
                 decoded = tokenizer.decode(i)
                 is_green = int(score_dict['green_token_mask'][index])
-                if i not in are_tokens_green:
+                if i not in tokens_green_red_counts:
                     if is_green == 1:
-                        are_tokens_green[i] = [decoded,1,0]
+                        tokens_green_red_counts[i] = [decoded,1,0]
                     else:
-                        are_tokens_green[i] = [decoded,0,1]
+                        tokens_green_red_counts[i] = [decoded,0,1]
                 else:
                     if is_green == 1:
-                        are_tokens_green[i][1] += 1
+                        tokens_green_red_counts[i][1] += 1
                     else:
-                        are_tokens_green[i][2] += 1
+                        tokens_green_red_counts[i][2] += 1
 
             # with simple hash's context width of 1, for some reason len(gen_tokens) is always 1 more than # tokens scored???
             # print(len(gen_tokens),score_dict['num_tokens_scored']) 
-            gen_length = [score_dict['num_tokens_scored'],score_dict_unique['num_tokens_scored']]
+            num_tokens_scored = [score_dict['num_tokens_scored'],score_dict_unique['num_tokens_scored']]
             too_short = False
-            if gen_length[0] < args.test_min_tokens:
-                print(f"Warning: generation {idx+1} is too short to test. ({gen_length[0]} < {args.test_min_tokens})")
+            if num_tokens_scored[0] < args.test_min_tokens:
+                print(f"Warning: generation {idx+1} is too short to test. ({num_tokens_scored[0]} < {args.test_min_tokens})")
                 too_short = True
 
             # same as detector.detect(gen_tokens), detector.unidetect(gen_tokens); using regular detector and "unique" detector
@@ -229,9 +229,9 @@ def main(args):
                 "z-score": z_score,
                 "p-value": p_value,
                 "wm_pred": wm_pred,
-                "gen_length": gen_length,
+                "num_tokens_scored": num_tokens_scored,
                 "num_green": num_green,
-                "are_tokens_green": are_tokens_green
+                "tokens_green_red_counts": tokens_green_red_counts
             }))
 
             if (idx + 1) % 1 == 0: # originally 100 (dump every 100 outputs), but changed to allow immediate observation
