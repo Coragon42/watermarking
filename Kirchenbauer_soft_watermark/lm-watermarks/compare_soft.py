@@ -180,6 +180,6 @@ def main():
     plt.close()
     print("Finished!")
 
-if __name__ == 'main':
+if __name__ == '__main__':
     print(grid_search())
     # main()
