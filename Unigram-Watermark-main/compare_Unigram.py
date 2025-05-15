@@ -1,6 +1,7 @@
 import json
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
+import matplotlib.ticker as ticker
 import random
 from time import time
 import csv
@@ -113,14 +114,8 @@ def grid_search():
     return max,max_params
 
 def main():
-    r_freqs_watermarked = aggregate(watermarked,0,20)
-    r_freqs_unwatermarked = aggregate(unwatermarked,0,20)
-
-    # r_freqs_watermarked = aggregate(watermarked,0,50)
-    # r_freqs_unwatermarked = aggregate(unwatermarked,0,50)
-
-    # r_freqs_watermarked = aggregate(watermarked,1001,1051)
-    # r_freqs_unwatermarked = aggregate(unwatermarked,1001,1051)
+    r_freqs_watermarked = aggregate(watermarked,500,1000)
+    r_freqs_unwatermarked = aggregate(unwatermarked,500,1000)
 
     all_ids = set(r_freqs_watermarked.keys()) | set (r_freqs_unwatermarked.keys())
     r_freqs_diff = {}
@@ -132,40 +127,136 @@ def main():
 
     r_freqs_diff_desc = sorted(r_freqs_diff.items(), key=lambda x: x[1][2], reverse=True) # list of tuples
 
-    top = r_freqs_diff_desc[:100]
-    bottom = r_freqs_diff_desc[-100:]
+    cut=15
+    fontsize=16
+    top = r_freqs_diff_desc[:cut]
+    bottom = r_freqs_diff_desc[-cut:]
 
     # Combine
     combined = top + bottom
 
     # Extract data
-    strings = [f'$_{{_{{{id}}}}}$'+tup[0] for id,tup in combined]
+    # strings = [f'$_{{_{{{id}}}}}$'+tup[0] for id,tup in combined]
+    strings = [item[1][0]+f'$_{{_{{{i}}}}}$' for i,item in enumerate(combined)]
     # strings = [tup[0] for id,tup in combined] # runs into double bar issue due to decoding collisions
     are_green = [tup[1] for id,tup in combined]
     diffs = [tup[2] for id,tup in combined]
 
     colors = ['green' if b==1 else 'red' for b in are_green]
 
-    plt.figure(figsize=(30, 6))
-    bars = plt.bar(strings, diffs, color=colors)
-    plt.axhline(0, color='black', linewidth=0.8)
+    # vertical, cut=15, fontsize=16
+    plt.figure(figsize=(5, 10),dpi=300)
+    frame = plt.gca()
+    frame.grid(which='major', axis='x', color='gray', linestyle='--', linewidth=0.5, zorder=0)
+    frame.grid(which='minor', axis='x', color='lightgray', linestyle='--', linewidth=0.5, zorder=0)
+    frame.set_ymargin(0.01)
+    frame.minorticks_on()
+    bars = plt.barh(strings, diffs, color=colors,zorder=3)
+    plt.axvline(0, color='black', linewidth=0.8)
 
     legend_patches = [
         Patch(color='green', label='green list'),
         Patch(color='red', label='red list')
     ]
-    plt.legend(handles=legend_patches)
+    plt.legend(loc='upper left',handles=legend_patches,fontsize=fontsize,bbox_to_anchor=(1, 1))
 
     # Aesthetics
-    plt.xticks(rotation=90, ha='right')
-    plt.ylabel("Relative Frequency Difference (watermarked-unwatermarked)")
-    plt.yscale('symlog', linthresh=1e-3)
-    plt.title("Largest Relative Frequency Differences (watermarked-unwatermarked)")
-    plt.tight_layout()
+    plt.xticks(fontsize=fontsize)
+    plt.yticks(fontsize=fontsize)
+    plt.xlabel("rel. freq. diff. (wm.-unwm.)",fontsize=fontsize)
+    plt.xscale('symlog', linthresh=1e-3)
+    # major_ticks = [-2e-2,0,2e-2]
+    # minor_ticks = [-3e-2,-2.5e-2,-1.5e-2,-1e-2,-5e-3,5e-3,1e-2,1.5e-2,2.5e-2,3e-2]
+    # custom_labels = ['-2e-2','0','2e-2']
+    # frame.xaxis.set_major_locator(ticker.FixedLocator(major_ticks))
+    # frame.xaxis.set_minor_locator(ticker.FixedLocator(minor_ticks))
+    # frame.set_xticklabels(custom_labels)
+    frame.invert_yaxis()
+    plt.title("Largest Relative Frequency Differences by Token (Unigram)",fontsize=fontsize)
+    plt.tight_layout(rect=[0, 0, 1.5, 1])
+
+    frame.axes.get_yaxis().set_visible(False)
+    for i,rect in enumerate(frame.patches):
+        if i<cut:
+            frame.text(-0.0001,rect.get_y()+0.65,strings[i],ha='right',fontsize=fontsize)
+        else:
+            frame.text(0.0001,rect.get_y()+0.65,strings[i],ha='left',fontsize=fontsize)
+
+
+    # horizontal, cut=50, fontsize=16
+    # plt.figure(figsize=(35, 4.6),dpi=300)
+    # frame = plt.gca()
+    # frame.grid(which='major', axis='y', color='gray', linestyle='--', linewidth=0.5, zorder=0)
+    # frame.grid(which='minor', axis='y', color='lightgray', linestyle='--', linewidth=0.5, zorder=0)
+    # frame.set_xmargin(0.01)
+    # frame.minorticks_on()
+    # bars = plt.bar(strings, diffs, color=colors,zorder=3)
+    # plt.axhline(0, color='black', linewidth=0.8)
+
+    # legend_patches = [
+    #     Patch(color='green', label='green list'),
+    #     Patch(color='red', label='red list')
+    # ]
+    # plt.legend(loc='upper left',handles=legend_patches,fontsize=fontsize,bbox_to_anchor=(1, 1))
+
+    # # Aesthetics
+    # plt.xticks(rotation=45,ha='right',rotation_mode='anchor',fontsize=fontsize)
+    # plt.yticks(fontsize=fontsize)
+    # plt.ylabel("rel. freq. diff. (wm.-unwm.)",fontsize=fontsize)
+    # plt.yscale('symlog', linthresh=1e-3)
+    # # major_ticks = [-2e-2,0,2e-2]
+    # # minor_ticks = [-3e-2,-2.5e-2,-1.5e-2,-1e-2,-5e-3,5e-3,1e-2,1.5e-2,2.5e-2,3e-2]
+    # # custom_labels = ['-2e-2','0','2e-2']
+    # # frame.yaxis.set_major_locator(ticker.FixedLocator(major_ticks))
+    # # frame.yaxis.set_minor_locator(ticker.FixedLocator(minor_ticks))
+    # # frame.set_yticklabels(custom_labels)
+    # # frame.invert_yaxis()
+    # plt.title("Largest Relative Frequency Differences by Token (Unigram)",fontsize=fontsize)
+    # plt.tight_layout(rect=[0, 0, 0.8, 1])
+
+
+    # horizontal, cut=50, fontsize=16
+    # plt.figure(figsize=(35, 6),dpi=300)
+    # frame = plt.gca()
+    # frame.grid(which='major', axis='y', color='gray', linestyle='--', linewidth=0.5, zorder=0)
+    # frame.grid(which='minor', axis='y', color='lightgray', linestyle='--', linewidth=0.5, zorder=0)
+    # frame.set_xmargin(0.01)
+    # frame.minorticks_on()
+    # bars = plt.bar(strings, diffs, color=colors,zorder=3)
+    # plt.axhline(0, color='black', linewidth=0.8)
+
+    # legend_patches = [
+    #     Patch(color='green', label='green list'),
+    #     Patch(color='red', label='red list')
+    # ]
+    # plt.legend(loc='upper left',handles=legend_patches,fontsize=fontsize,bbox_to_anchor=(1, 1))
+
+    # # Aesthetics
+    # plt.xticks(rotation=45,ha='right',rotation_mode='anchor',fontsize=fontsize)
+    # plt.yticks(fontsize=fontsize)
+    # plt.ylabel("rel. freq. diff. (wm.-unwm.)",fontsize=fontsize)
+    # plt.yscale('symlog', linthresh=1e-3)
+    # # major_ticks = [-2e-2,0,2e-2]
+    # # minor_ticks = [-3e-2,-2.5e-2,-1.5e-2,-1e-2,-5e-3,5e-3,1e-2,1.5e-2,2.5e-2,3e-2]
+    # # custom_labels = ['-2e-2','0','2e-2']
+    # # frame.yaxis.set_major_locator(ticker.FixedLocator(major_ticks))
+    # # frame.yaxis.set_minor_locator(ticker.FixedLocator(minor_ticks))
+    # # frame.set_yticklabels(custom_labels)
+    # # frame.invert_yaxis()
+    # plt.title("Largest Relative Frequency Differences by Token (Unigram)",fontsize=fontsize)
+    # plt.tight_layout(rect=[0, 0, 0.8, 1])
+
+    # frame.axes.get_xaxis().set_visible(False)
+    # for i,rect in enumerate(frame.patches):
+    #     if i<cut:
+    #         frame.text(rect.get_x()+0.65,-0.0001,strings[i],ha='right',fontsize=fontsize,rotation=90,rotation_mode='anchor')
+    #     else:
+    #         frame.text(rect.get_x()+0.65,0.0001,strings[i],ha='left',fontsize=fontsize,rotation=90,rotation_mode='anchor')
+
     plt.savefig('.\data\Adaptive\compare_Unigram.png', dpi=300, bbox_inches='tight')
     plt.close()
     print("Finished!")
 
 if __name__ == '__main__':
-    print(grid_search())
-    # main()
+    # print(grid_search())
+    main()
