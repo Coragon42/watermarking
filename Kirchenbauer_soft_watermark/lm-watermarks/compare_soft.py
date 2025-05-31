@@ -193,7 +193,7 @@ def main():
     # vertical, cut=15, fontsize=16
     plt.figure(figsize=(5, 10),dpi=300)
     frame = plt.gca()
-    frame.grid(which='major', axis='x', color='gray', linestyle='--', linewidth=0.5, zorder=0)
+    frame.grid(which='major', axis='x', color='lightgray', linestyle='--', linewidth=0.5, zorder=0)
     frame.grid(which='minor', axis='x', color='lightgray', linestyle='--', linewidth=0.5, zorder=0)
     frame.minorticks_on()
     frame.set_ymargin(0.01)
@@ -204,12 +204,12 @@ def main():
         Patch(color='green', label='green list'),
         Patch(color='red', label='red list')
     ]
-    plt.legend(loc='upper left',handles=legend_patches,fontsize=fontsize,bbox_to_anchor=(1, 1))
+    # plt.legend(loc='upper left',handles=legend_patches,fontsize=fontsize,bbox_to_anchor=(1, 1))
 
     # Aesthetics
     plt.xticks(fontsize=fontsize)
     plt.yticks(fontsize=fontsize)
-    plt.xlabel("rel. freq. diff. (wm.-unwm.)",fontsize=fontsize)
+    # plt.xlabel("rel. freq. diff. (wm.-unwm.)",fontsize=fontsize)
     # plt.xscale('symlog', linthresh=1e-4)
     major_ticks = [-4e-4,-2e-4,0,2e-4,4e-4]
     minor_ticks = [-3e-4,-1e-4,1e-4,3e-4]
@@ -218,8 +218,9 @@ def main():
     frame.xaxis.set_minor_locator(ticker.FixedLocator(minor_ticks))
     frame.set_xticklabels(custom_labels)
     frame.invert_yaxis()
-    plt.title("Largest Relative Frequency Differences by Token (soft)",fontsize=fontsize)
-    plt.tight_layout(rect=[0, 0, 1.7, 1])
+    # plt.title("Largest Relative Frequency Differences by Token (soft)",fontsize=fontsize)
+    # plt.tight_layout(rect=[0, 0, 1.7, 1])
+    plt.tight_layout(rect=[0, 0, 1.3, 1]) # no title/legend/xlabel
 
     frame.axes.get_yaxis().set_visible(False)
     for i,rect in enumerate(frame.patches):
@@ -299,7 +300,7 @@ def main():
     #     else:
     #         frame.text(rect.get_x()+0.65,0.00002,strings[i],ha='left',fontsize=fontsize,rotation=90,rotation_mode='anchor')
 
-    plt.savefig('.\data\Adaptive\compare_soft.png', dpi=300, bbox_inches='tight')
+    plt.savefig('.\data\Adaptive\compare_soft.svg', dpi=300, bbox_inches='tight')
     plt.close()
     print("Finished!")
 

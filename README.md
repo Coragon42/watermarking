@@ -2,21 +2,19 @@
 
 This repository contains code and resources for our research on watermarking AI-generated content, conducted under the guidance of **Professor Ananth** as part of the **Early Research Scholars Program (ERSP) at UCSB**.  
 
-Find our benchmarked sheet with various comparision and our notes on the research at the following links: 
-- https://docs.google.com/spreadsheets/d/15F7iMyDz2Qb0t_mAk-JszkRt_wM25wpxttvJuKUWmc8/edit?gid=0#gid=0
-- https://docs.google.com/document/d/1v2EuYsI66-0ZvISgL1vXnowjILgP0uxQuoFIDA4suEs/edit?tab=t.0#heading=h.iou2evld7cx1
-
 ## 📌 Overview  
-This project explores various AI watermarking techniques to embed and detect watermarks in generated text while preserving semantic integrity. The repository includes:  
+This project explores various LLM watermarking techniques to embed and detect watermarks in generated text while preserving semantic integrity. The repository includes:  
 
-- **SynthID** – Implementation and experimentation with Google’s SynthID watermarking method.  
-- **Soft Watermarking** – Exploration of probabilistic watermarking techniques for text.  
-- **Unigram Watermarking** – Application of unigram-based watermarking methods.  
+- **SynthID** – Experimenting with Google’s SynthID watermarking method.  
+- **Soft Watermarking** – Revisiting the pioneer of key-based watermarks.
+- **Unigram Watermarking** – Evaluating a similar watermark with a fixed green list for comparison.
 
 ## 📂 Repository Contents  
-- Collaborative notebooks and Python scripts for different watermarking methods.
-- Experiments and evaluation results.
-- Research insights and findings.  
+- Collaborative notebooks and Python scripts for different watermarking methods, including custom mass-prompting pipelines for Soft and Unigram watermarks
+- Experimental results and research insights
+- Spreadsheet benchmarking various attack examples and ideas:
+https://docs.google.com/spreadsheets/d/15F7iMyDz2Qb0t_mAk-JszkRt_wM25wpxttvJuKUWmc8/edit?gid=0#gid=0
+- Poster presentation
 
 ## 👥 Contributors  
 - **Zeel Patel**  
@@ -26,3 +24,10 @@ This project explores various AI watermarking techniques to embed and detect wat
 
 ## Noted  
 This repository primarily consists of collaborative notebooks and code used in our research.  
+
+Environment setup for all three watermarks, after creating and activating environment (python=3.11.11):
+- python -m pip install “synthid-text[notebook]” notebook absl-py mock pytest tensorflow-datasets>=4.9.3 SentencePiece accelerate>=0.26.0 safetensors>=0.4.1 bitsandbytes tf-keras
+- python -m pip install --upgrade jax jaxlib flax transformers optax
+- after installing CUDA Toolkit, install PyTorch accordingly, e.g.:
+- python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+- python -m pip install gradio nltk
